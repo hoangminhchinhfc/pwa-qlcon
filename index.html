@@ -3,53 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#317EFB"/>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
-  <title>Ứng dụng của tôi</title>
+  <title>Chương Trình Quản Lý Con</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #2a7de1;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin-top: 40px;
+      color: #444;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e9f1fb;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 6px 12px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+  </style>
 </head>
 <body>
+
   <div class="container">
-    <h1>Chào mừng!</h1>
-    <p>Đây là ứng dụng PWA đơn giản.</p>
-    <p>Bạn có thể thêm ứng dụng này vào màn hình chính.</p>
+    <h1>Chương Trình Quản Lý Con</h1>
     
-    <!-- ✅ Nút Add to Home Screen -->
-    <button id="a2hsBtn" style="display: none; padding: 10px 20px; font-size: 16px; margin-top: 20px;">
-      📲 Thêm vào màn hình chính
-    </button>
+    <h2>Danh Sách User</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>User Name</th>
+          <th>Password</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody id="userList">
+        <tr><td colspan="3">Đang tải...</td></tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- ✅ Script xử lý A2HS -->
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <script>
-    let deferredPrompt;
+    // 🔹 Firebase config
+    var firebaseConfig = {
+      apiKey: "AIzaSyCoOFo_pN6dvjJr_PDx88VULeGXh0pj3xU",
+      authDomain: "myqlcon.firebaseapp.com",
+      databaseURL: "https://myqlcon-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "myqlcon",
+      storageBucket: "myqlcon.appspot.com",
+      messagingSenderId: "115813241978",
+      appId: "1:115813241978:web:2a2567a437dd7c684857c3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    var database = firebase.database();
+    var usersRef = database.ref("users");
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Ngăn trình duyệt hiển thị banner mặc định
-      e.preventDefault();
-      deferredPrompt = e;
+    // 🔹 Tải và hiển thị users
+    usersRef.on("value", function(snapshot) {
+      var userListElem = document.getElementById("userList");
+      userListElem.innerHTML = ""; // Clear cũ
 
-      // Hiện nút
-      const btn = document.getElementById('a2hsBtn');
-      btn.style.display = 'inline-block';
+      if (!snapshot.exists()) {
+        userListElem.innerHTML = `<tr><td colspan="3">Không có dữ liệu user</td></tr>`;
+        return;
+      }
 
-      btn.addEventListener('click', () => {
-        // Hiện hộp thoại cài đặt
-        deferredPrompt.prompt();
+      snapshot.forEach(function(childSnapshot) {
+        var userData = childSnapshot.val();
+        var userKey = childSnapshot.key;
+        var userName = userData.UserName || userKey;
+        var password = userData.Password || "Không có";
 
-        // Chờ người dùng phản hồi
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('✅ Người dùng đã chấp nhận A2HS');
-          } else {
-            console.log('❌ Người dùng đã từ chối A2HS');
-          }
-          deferredPrompt = null;
-        });
+        var row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${userName}</td>
+          <td>${password}</td>
+          <td><button onclick="xoaUser('${userKey}')">Xóa</button></td>
+        `;
+        userListElem.appendChild(row);
       });
     });
+
+    // 🔹 Hàm xóa user
+    function xoaUser(userKey) {
+      if (confirm("Bạn có chắc chắn muốn xóa user này không?")) {
+        firebase.database().ref("users/" + userKey).remove()
+          .then(() => alert("Đã xóa user thành công!"))
+          .catch(err => alert("Lỗi khi xóa: " + err.message));
+      }
+    }
   </script>
 
-  <script src="script.js"></script>
 </body>
 </html>
