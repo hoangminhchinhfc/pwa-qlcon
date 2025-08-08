@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#317EFB"/>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+  <title>Ứng dụng của tôi</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Chào mừng!</h1>
+    <p>Đây là ứng dụng PWA đơn giản.</p>
+    <p>Bạn có thể thêm ứng dụng này vào màn hình chính.</p>
+    
+    <!-- ✅ Nút Add to Home Screen -->
+    <button id="a2hsBtn" style="display: none; padding: 10px 20px; font-size: 16px; margin-top: 20px;">
+      📲 Thêm vào màn hình chính
+    </button>
+  </div>
+
+  <!-- ✅ Script xử lý A2HS -->
+  <script>
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Ngăn trình duyệt hiển thị banner mặc định
+      e.preventDefault();
+      deferredPrompt = e;
+
+      // Hiện nút
+      const btn = document.getElementById('a2hsBtn');
+      btn.style.display = 'inline-block';
+
+      btn.addEventListener('click', () => {
+        // Hiện hộp thoại cài đặt
+        deferredPrompt.prompt();
+
+        // Chờ người dùng phản hồi
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('✅ Người dùng đã chấp nhận A2HS');
+          } else {
+            console.log('❌ Người dùng đã từ chối A2HS');
+          }
+          deferredPrompt = null;
+        });
+      });
+    });
+  </script>
+
+  <script src="script.js"></script>
+</body>
+</html>
